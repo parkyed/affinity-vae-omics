@@ -53,14 +53,12 @@ if __name__ == '__main__':
     output_path = args.output_path
 
     # read in counts matrix and classes
-
     data_matrix = pd.read_csv(matrix_path, header=0)
     sample_classes = pd.read_csv(labels_path, header=0).values.flatten()
     sample_classes_unique = np.unique(sample_classes).reshape(1, -1)  # -1 allows for variable number of classes
 
     # save the unique list of classes as a csv file
-
-    np.savetxt(output_path + 'class_lst.csv', sample_classes_unique, fmt='%i',  delimiter=",")  # MTN lets use os.path)
+    np.savetxt(os.path.join(output_path,'class_lst.csv'), sample_classes_unique, fmt='%i',  delimiter=",")
 
     # split matrix and save as individual files
     matrixsplitsave(omic_mat=data_matrix, class_vector=sample_classes, path_out=output_path)
