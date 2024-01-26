@@ -327,13 +327,13 @@ class Dataset_reader(Dataset):     # this is a custom torch dataset
         # file info and metadata
         meta = "_".join(filename.split(".")[0].split("_")[1:])              # creating a dataframe to downstream analysis
         avg = np.around(np.average(x), decimals=4)
-        img = format(x, len(data.shape))  # used for dynamic preview in Altair
+        # img = format(x, len(data.shape))  # used for dynamic preview in Altair ## EP commenting out as raises error with omics data
         meta = {
             "filename": filename,
             "id": y,
             "meta": meta,
             "avg": avg,
-            "image": img,
+            # "image": img,          ## commenting out for now as raises error with omics data
         }
         return x, y, aff, meta
 
