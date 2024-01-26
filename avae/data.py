@@ -241,7 +241,7 @@ def load_data(
         return trains, vals, tests, lookup, data.dim()  # , dsize
 
 
-class Dataset_reader(Dataset):
+class Dataset_reader(Dataset):     # this is a custom torch dataset
     def __init__(
         self,
         root_dir: str,
@@ -266,7 +266,7 @@ class Dataset_reader(Dataset):
         self.root_dir = root_dir
 
         self.paths = [
-            f for f in os.listdir(root_dir) if "." + self.datatype in f   # creat list of all the paths in the dir
+            f for f in os.listdir(root_dir) if "." + self.datatype in f   # create list of all the paths in the dir
         ]
 
         random.shuffle(self.paths)                                  # randomize for the split

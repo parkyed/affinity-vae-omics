@@ -64,7 +64,7 @@ if __name__ == '__main__':
     #
     # save the unique list of classes as a csv file
 
-    np.savetxt(output_path + 'class_lst.csv', sample_classes_unique, fmt='%i',  delimiter=",") #MTN lets use os.path.join(output_path, 'class_lst.csv')
+    np.savetxt(os.path.join(output_path,'class_lst.csv'), sample_classes_unique, fmt='%i',  delimiter=",")
 
     # split matrix and save as individual files
     matrixsplitsave(data_matrix, sample_classes, output_path) # MTN should we use omic.mat instead of data_matrix? omic_mat is not defined?
