@@ -58,17 +58,16 @@ if __name__ == '__main__':
 
     # read in counts matrix and classes
 
-    data_matrix = pd.read_csv(matrix_path, header=0)
+    data_matrix = pd.read_csv(matrix_path, header=0) # MTN should we use omic.mat instead of data_matrix? omic_mat is not defined?
     sample_classes = pd.read_csv(labels_path, header=0).values.flatten()
-    sample_classes_unique = np.unique(sample_classes).reshape(1,2)
+    sample_classes_unique = np.unique(sample_classes).reshape(1,2) # MTN why do we need to reshape this? lets use -1 instead of 2 in order to handle any number of classes
     #
     # save the unique list of classes as a csv file
 
-    np.savetxt(output_path + 'class_lst.csv', sample_classes_unique, fmt='%i',  delimiter=",")
+    np.savetxt(output_path + 'class_lst.csv', sample_classes_unique, fmt='%i',  delimiter=",") #MTN lets use os.path.join(output_path, 'class_lst.csv')
 
     # split matrix and save as individual files
-
-    matrixsplitsave(data_matrix, sample_classes, output_path)
+    matrixsplitsave(data_matrix, sample_classes, output_path) # MTN should we use omic.mat instead of data_matrix? omic_mat is not defined?
 
 # next steps to add
 # randomised train test split
