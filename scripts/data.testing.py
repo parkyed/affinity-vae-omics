@@ -14,23 +14,12 @@ trains, vals, tests, lookup, data_dim = load_data(
     datapath=datapath,
     datatype='npy',
     # lim=lim,
-    # splt=splt,
-    # batch_s=batch_s,
-    # no_val_drop=no_val_drop,
+    splt= 20,
+    batch_s= 10,
     eval=False,
     affinity=affinitypath,
-    classes=None
-    # gaussian_blur=gaussian_blur,
-    # normalise=normalise,
-    # shift_min=shift_min,
-    # rescale=rescale,
+    classes=None,
+    # normalise=True
 )
 
-print(len(trains))
-
-datapath
-test_array = np.load("/Users/ep/Documents/1_datasets/aff_vae/affinity-vae-omics/omics/omics_data/input_arrays/0_Sample.2.npy")
-
-type(test_array)
-test_array[:10]
-test_array.shape
+next(iter(trains))
