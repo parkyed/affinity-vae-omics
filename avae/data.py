@@ -367,8 +367,10 @@ class Dataset_reader(Dataset):     # this is a custom torch dataset
             x = T(x)
 
         if self.normalise:
-            T = transforms.Normalize(0, 1, inplace=False)
-            x = T(x)
+            # T = transforms.Normalize(0, 1, inplace=False) ## EP this doesn't work with 1D array, expects RGB image
+            # x = T(x) ## commented out for now as doesn't work with 1D omics array
+            ## changed to simple standardisation / z-score
+            x = (x - x.mean()) / x.std()
 
         if self.transform:
             x = self.transform(x)
