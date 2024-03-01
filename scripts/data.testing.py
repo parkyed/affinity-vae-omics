@@ -15,11 +15,11 @@ trains, vals, tests, lookup, data_dim = load_data(
     datatype='npy',
     # lim=lim,
     splt= 20,
-    batch_s= 10,
+    batch_s= 16,
     eval=False,
     affinity=affinitypath,
     classes=None,
-    # normalise=True
+    normalise=True
 )
 
-next(iter(trains))
+print(next(iter(trains)))

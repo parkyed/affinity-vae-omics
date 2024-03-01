@@ -208,7 +208,7 @@ def add_meta(
     meta = pd.DataFrame(batch_meta)
 
     meta["mode"] = mode
-    meta["image"] += format(x_hat, data_dim)
+    # meta["image"] += format(x_hat, data_dim) # commented out at this requires image input
     for d in range(latent_mu.shape[-1]):
         meta[f"lat{d}"] = np.array(latent_mu[:, d].cpu().detach().numpy())
     for d in range(latent_logvar.shape[-1]):

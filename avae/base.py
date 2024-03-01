@@ -7,6 +7,7 @@ from avae.encoders.base import AbstractEncoder
 
 
 class SpatialDims(enum.IntEnum):
+    ONE = 1  # EP - added this for conv.1d
     TWO = 2
     THREE = 3
 

@@ -49,12 +49,12 @@ class AffinityLoss:
             The affinity loss.
         """
         # first calculate the affinity, for the real classes
-        c = (
+        c = (                                                          # list out all possible combinations of the class types
             torch.combinations(y_true, r=2, with_replacement=False)
             .to(self.device)
             .long()
         )
-        affinity = self.lookup[c[:, 0], c[:, 1]].to(self.device)
+        affinity = self.lookup[c[:, 0], c[:, 1]].to(self.device)       # look up the affinity for all of these pairs - vector of the affinity for all poosible pairs of observations in the batch
 
         # now calculate the latent similarity
         z_id = torch.tensor(list(range(y_pred.shape[0])))
