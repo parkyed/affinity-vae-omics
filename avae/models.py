@@ -16,8 +16,10 @@ def set_layer_dim(
         return nn.Conv2d, nn.ConvTranspose2d, nn.BatchNorm2d
     elif ndim == SpatialDims.THREE:
         return nn.Conv3d, nn.ConvTranspose3d, nn.BatchNorm3d
+    elif ndim == SpatialDims.ONE:
+        return nn.Conv1d, nn.ConvTranspose1d, nn.BatchNorm1d     # added the 1D convolutional models
     else:
-        logging.error("Data must be 2D or 3D.")
+        logging.error("Data must be 1D, 2D or 3D.")
         exit(1)
 
 
@@ -39,6 +41,37 @@ def dims_after_pooling(start: int, n_pools: int) -> int:
 
     """
     return start // (2**n_pools)
+
+# EP added the function below to handle calculation of the shape of 1D convolutional layers after pooling
+
+def dims_after_pooling_1D(length: int, n_pools: int) -> int:
+    """Calculate the size of a 1D layer after n pooling ops.
+
+    Parameters
+    ----------
+    start: int
+        The size of the layer before pooling.
+    n_pools: int
+        The number of pooling operations.
+
+    Returns
+    -------
+    int
+        The size of the layer after pooling.
+
+
+    """
+    kernel_size=3
+    stride=2
+    padding=1
+
+    length = ((length + (2 * padding) - (kernel_size - 1) - 1) / stride) + 1
+    n_pools = n_pools - 1
+    
+    if n_pools > 0:
+        length = dims_after_pooling_1D(length, n_pools)
+    
+    return int(length)
 
 
 def set_device(gpu: bool) -> torch.device:

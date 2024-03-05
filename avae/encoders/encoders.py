@@ -3,9 +3,10 @@ from typing import Optional
 
 import numpy as np
 import torch
+import torch.nn as nn # add this as required for DecoderC - could find a way to add back to models.py
 
 from avae.encoders.base import AbstractEncoder
-from avae.models import dims_after_pooling, set_layer_dim
+from avae.models import dims_after_pooling, set_layer_dim, dims_after_pooling_1D  # added dims_after_pooling_1D
 
 
 class Encoder(AbstractEncoder):
@@ -182,31 +183,41 @@ class EncoderA(AbstractEncoder):
         self.pose = not (pose_dims == 0)
         self.bnorm = bnorm
 
-        assert all(
-            [int(x) == x for x in np.array(input_size) / (2**depth)]
-        ), (
-            "Input size not compatible with --depth. Input must be divisible "
-            "by {}.".format(2**depth)
-        )
-        filters = [capacity * 2**x for x in range(depth)]
 
-        unflat_shape = tuple(
-            [
-                filters[-1],
-            ]
-            + [dims_after_pooling(ax, depth) for ax in input_size]
-        )
-        flat_shape = np.prod(unflat_shape)
+        if len(input_size) == 1: # added a if else to specify the correct condition for a 1D input (assume fixed kernal size, stride and padding)
+            assert int(dims_after_pooling_1D(int(np.array(input_size)[0]), depth)) == dims_after_pooling_1D(int(np.array(input_size)[0]), depth), "Input length not compatible with --depth, kernal, stide and padding"
+        else:
+            assert all(
+                [int(x) == x for x in np.array(input_size) / (2**depth)]
+            ), (
+                "Input size not compatible with --depth. Input must be divisible "
+                "by {}.".format(2**depth)
+            )
 
-        ndim = len(unflat_shape[1:])
+        filters = [capacity * 2**x for x in range(depth)]       # capacity specified in the config file
 
-        conv, _, BNORM = set_layer_dim(ndim)
+        if len(input_size) == 1:                  # added if else - output shape different for 1D vs. 2D inputs. dims_after_pooling_1D in models.py
+            unflat_shape = tuple([filters[-1],
+                                 dims_after_pooling_1D(int(np.array(input_size)[0]), depth)])
+
+        else:    
+            unflat_shape = tuple(                                   
+                [
+                    filters[-1],
+                ]
+                + [dims_after_pooling(ax, depth) for ax in input_size]   # dims after pooling is function in models.py
+            )
+        flat_shape = np.prod(unflat_shape)                        # multiply out last conv. layer to get length of input vector for fully connected layer
+
+        ndim = len(unflat_shape[1:])                              # number of dimensions of image, excluding the number of filters
+
+        conv, _, BNORM = set_layer_dim(ndim)                  # set_layer_dim is a helpfer function that gets the nn.conv models of the right number of dimensions
 
         self.encoder = torch.nn.Sequential()
 
-        input_channel = 1
-        for d in range(len(filters)):
-            self.encoder.append(
+        input_channel = 1                                         # hard coded - what is the image is rgb? Is encoder A just for bw images?
+        for d in range(len(filters)):                             # recursive adding of convolutional layers, based on the filter sizes given in filters
+            self.encoder.append(                                  # note: kernal size, stride and padding set at standard values for image processing
                 conv(
                     in_channels=input_channel,
                     out_channels=filters[d],
@@ -218,19 +229,19 @@ class EncoderA(AbstractEncoder):
             if self.bnorm:
                 self.encoder.append(BNORM(filters[d]))
             self.encoder.append(torch.nn.ReLU(True))
-            input_channel = filters[d]
+            input_channel = filters[d]                            # update the number of filters (input for next layer) to output from current layer
 
-        self.encoder.append(torch.nn.Flatten())
-        self.mu = torch.nn.Linear(flat_shape, latent_dims)
-        self.log_var = torch.nn.Linear(flat_shape, latent_dims)
+        self.encoder.append(torch.nn.Flatten())                   # flatten final convolutional layer
+        self.mu = torch.nn.Linear(flat_shape, latent_dims)        # fully connected layer to reduce the dimensionality to the required number of latent dims
+        self.log_var = torch.nn.Linear(flat_shape, latent_dims)   
         self.pose_fc = torch.nn.Linear(flat_shape, pose_dims)
 
     def forward(self, x):
         encoded = self.encoder(x)
-        mu = self.mu(encoded)
-        log_var = self.log_var(encoded)
+        mu = self.mu(encoded)                                     # mean calculated from the final fully connected layer - mean is a learned parameter
+        log_var = self.log_var(encoded)                           # variance calculated in the same way as the mean, but will be different since a learned parameter
         pose = self.pose_fc(encoded)
-        return mu, log_var, pose
+        return mu, log_var, pose                                   
 
 
 class EncoderB(AbstractEncoder):
@@ -347,3 +358,48 @@ class EncoderB(AbstractEncoder):
             return x_mu, x_logvar, x_pose
         else:
             return x_mu, x_logvar
+
+
+class EncoderC(AbstractEncoder):
+    def __init__(
+            self,
+            input_size: tuple,
+            capacity: Optional[int] = None,
+            # reuse capacity (number of channels/ filters in CNN) as the number of nodes in each hidden layer
+            depth: int = 2,  # reuse depth as the number of fully connected hidden layers
+            latent_dims: int = 8,
+            pose_dims: int = 0,
+            bnorm: bool = True,
+    ):
+        super(EncoderC, self).__init__()
+        self.pose = not (pose_dims == 0)
+        self.bnorm = bnorm
+
+        assert len(input_size) == 1, "Input must be a 1D vector for this Encoder / Decoder"
+
+        n_hidden = np.repeat(capacity, depth)  # define n_hidden as a function of capacity and depth
+
+        self.encoder = torch.nn.Sequential()
+
+        input_features = int(np.array(input_size)[0])  # the dimensions of the input
+
+        for d in range(len(n_hidden)):  # recursive adding of hidden layers, based on the n_hidden in each layer
+            self.encoder.append(
+                nn.Linear(
+                    in_features=input_features,
+                    out_features=n_hidden[d]
+                )
+            )
+            self.encoder.append(torch.nn.ReLU(True))
+            input_features = n_hidden[d]  # update the number of nodes in the hidden layer to input to the next layer
+
+        self.mu = torch.nn.Linear(in_features=n_hidden[-1], out_features=latent_dims)  # reduce the dimensionality to the required number of latent dims
+        self.log_var = torch.nn.Linear(in_features=n_hidden[-1], out_features=latent_dims)
+        self.pose_fc = torch.nn.Linear(in_features=n_hidden[-1], out_features=pose_dims)
+    def forward(self, x):
+        encoded = self.encoder(x)
+        mu = torch.flatten(self.mu(encoded), start_dim = 1)  # REMOVE THE FLATTEN IF SIZE ISSUE FIXED ELSEWHERE...mean calculated from the final fully connected layer - mean is a learned parameter
+        log_var = torch.flatten(self.log_var(encoded), start_dim = 1)  # REMOVE THE FLATTEN IF SIZE ISSUE FIXED ELSEWHERE... variance calculated in the same way as the mean, but will be different since a learned parameter
+        pose = torch.flatten(self.pose_fc(encoded), start_dim = 1) # REMOVE THE FLATTEN IF SIZE ISSUE FIXED ELSEWHERE...
+        return mu, log_var, pose
+

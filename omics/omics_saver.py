@@ -24,7 +24,7 @@ def matrixsplitsave(omic_mat, class_vector, path_out):
 
     for sid, sample, label in zip(sample_names_vec, gene_array_lst, class_vector):
         sample_name = str(label) + '_' + str(sid) + '.npy'
-        sample = np.array(sample)
+        sample = np.array(sample) #.reshape(1, -1)  # edited out while testing the impact of 1d vectors
 
         # Build save path
         save_path = os.path.join(path_out, 'input_arrays', sample_name)

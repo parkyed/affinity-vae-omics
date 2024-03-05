@@ -3,9 +3,10 @@ import logging
 
 import numpy as np
 import torch
+import torch.nn as nn # add this as required for DecoderC - could find a way to add back to models.py
 
 from avae.decoders.base import AbstractDecoder
-from avae.models import dims_after_pooling, set_layer_dim
+from avae.models import dims_after_pooling, set_layer_dim, dims_after_pooling_1D  # added dims_after_pooling_1D
 
 
 class Decoder(AbstractDecoder):
@@ -171,20 +172,27 @@ class DecoderA(AbstractDecoder):
         self.pose = not (pose_dims == 0)
         self.bnorm = bnorm
 
-        assert all(
-            [int(x) == x for x in np.array(input_size) / (2**depth)]
-        ), (
-            "Input size not compatible with --depth. Input must be divisible "
-            "by {}.".format(2**depth)
-        )
+        if len(input_size) == 1: # added a if else to specify the correct condition for a 1D input (assume fixed kernal size, stride and padding)
+            assert int(dims_after_pooling_1D(int(np.array(input_size)[0]), depth)) == dims_after_pooling_1D(int(np.array(input_size)[0]), depth), "Input length not compatible with --depth, kernal, stide and padding"
+        else:
+            assert all(
+                [int(x) == x for x in np.array(input_size) / (2**depth)]
+            ), (
+                "Input size not compatible with --depth. Input must be divisible "
+                "by {}.".format(2**depth)
+            )
         filters = [capacity * 2**x for x in range(depth)]
 
-        unflat_shape = tuple(
-            [
-                filters[-1],
-            ]
-            + [dims_after_pooling(ax, depth) for ax in input_size]
-        )
+        if len(input_size) == 1:                  # added if else - output shape different for 1D vs. 2D inputs. dims_after_pooling_1D in models.py
+            unflat_shape = tuple([filters[-1],
+                                 dims_after_pooling_1D(int(np.array(input_size)[0]), depth)])
+        else:
+            unflat_shape = tuple(
+                [
+                    filters[-1],
+                ]
+                + [dims_after_pooling(ax, depth) for ax in input_size]
+            )
         flat_shape = np.prod(unflat_shape)
 
         ndim = len(unflat_shape[1:])
@@ -198,41 +206,78 @@ class DecoderA(AbstractDecoder):
         )
         self.decoder.append(torch.nn.Unflatten(-1, unflat_shape))
 
-        for d in reversed(range(len(filters))):
-            if d != 0:
-                if not d == len(filters) - 1:
-                    self.decoder.append(
-                        conv_T(
-                            in_channels=filters[d],
-                            out_channels=filters[d - 1],
-                            kernel_size=3,
-                            stride=2,
-                            padding=1,
+        if len(input_size) == 1: # EP added this if else as the decoder doesn't produce a 1d vector of the input size - kernal/stride/padding different to encoder
+            for d in reversed(range(len(filters))):
+                if d != 0:
+                    if not d == len(filters) - 1:
+                        self.decoder.append(
+                            conv_T(
+                                in_channels=filters[d],
+                                out_channels=filters[d - 1],
+                                kernel_size=3,
+                                stride=2,
+                                padding=1,
+                            )
                         )
-                    )
-                else:
-                    self.decoder.append(
-                        conv_T(
-                            in_channels=filters[d],
-                            out_channels=filters[d - 1],
-                            kernel_size=3,
-                            stride=2,
-                            padding=0,
+                    else:
+                        self.decoder.append(
+                            conv_T(
+                                in_channels=filters[d],
+                                out_channels=filters[d - 1],
+                                kernel_size=3,
+                                stride=2,
+                                padding=1,  # don't understand why the padding is set to zero for the first layer
+                            )
                         )
-                    )
-                if self.bnorm:
-                    self.decoder.append(BNORM(filters[d - 1]))
-                self.decoder.append(torch.nn.ReLU(True))
+                    if self.bnorm:
+                        self.decoder.append(BNORM(filters[d - 1]))
+                    self.decoder.append(torch.nn.ReLU(True))
 
-        self.decoder.append(
-            conv_T(
-                in_channels=filters[0],
-                out_channels=1,
-                kernel_size=2,
-                stride=2,
-                padding=1,
+            self.decoder.append(
+                conv_T(
+                    in_channels=filters[0],
+                    out_channels=1,
+                    kernel_size=3,
+                    stride=2,
+                    padding=1,
+                )
             )
-        )
+        else:
+            for d in reversed(range(len(filters))):
+                if d != 0:
+                    if not d == len(filters) - 1:
+                        self.decoder.append(
+                            conv_T(
+                                in_channels=filters[d],
+                                out_channels=filters[d - 1],
+                                kernel_size=3,
+                                stride=2,
+                                padding=1,
+                            )
+                        )
+                    else:
+                        self.decoder.append(
+                            conv_T(
+                                in_channels=filters[d],
+                                out_channels=filters[d - 1],
+                                kernel_size=3,
+                                stride=2,
+                                padding=0,     # don't understand why the padding is set to zero for the first layer
+                            )
+                        )
+                    if self.bnorm:
+                        self.decoder.append(BNORM(filters[d - 1]))
+                    self.decoder.append(torch.nn.ReLU(True))
+
+            self.decoder.append(
+                conv_T(
+                    in_channels=filters[0],
+                    out_channels=1,
+                    kernel_size=2,
+                    stride=2,
+                    padding=1,
+                )
+            )
 
     def forward(self, x, x_pose):
         if self.pose:
@@ -344,3 +389,49 @@ class DecoderB(AbstractDecoder):
             x = self.norm_dec[d](torch.nn.functional.relu(self.conv_dec[d](x)))
         x = torch.sigmoid(self.conv_dec[-1](x))
         return x
+
+
+class DecoderC(AbstractDecoder):
+    def __init__(
+            self,
+            input_size: tuple,
+            capacity: int = 8, # reuse capacity (number of channels/ filters in CNN) as the number of nodes in each hidden layer
+            depth: int = 2,    # reuse depth as the number of fully connected hidden layers
+            latent_dims: int = 8,
+            pose_dims: int = 0,
+            bnorm: bool = True,
+    ):
+        super(DecoderC, self).__init__()
+        self.pose = not (pose_dims == 0)
+        self.bnorm = bnorm
+
+        assert len(input_size) == 1, "Input must be a 1D vector for this Encoder / Decoder"
+
+        n_hidden = np.repeat(capacity, depth)  # define n_hidden as a function of capacity and depth
+
+        self.decoder = torch.nn.Sequential()
+
+        input_features = int(np.array(input_size)[0])  # the dimensions of the input
+
+        self.decoder.append(torch.nn.Linear(latent_dims + pose_dims, n_hidden[-1]))
+
+        for d in reversed(
+                range(len(n_hidden))):  # recursive adding of hidden layers, based on the n_hidden in each layer
+            self.decoder.append(
+                nn.Linear(
+                    in_features=n_hidden[d],
+                    out_features=n_hidden[d-1]
+                )
+            )
+            self.decoder.append(torch.nn.ReLU(True))
+            # input_features = n_hidden[d-1]  # update the number of nodes in the hidden layer to input to the next layer
+
+        self.decoder.append(
+            torch.nn.Linear(n_hidden[0], input_features)
+        )
+
+    def forward(self, x, x_pose):
+        if self.pose:
+            return self.decoder(torch.cat([x_pose, x], dim=-1))
+        else:
+            return self.decoder(x)

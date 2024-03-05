@@ -312,7 +312,7 @@ class Dataset_reader(Dataset):     # this is a custom torch dataset
         filename = self.paths[item]
 
         data = np.array(self.read(filename))
-        x = self.voxel_transformation(data)          # x is the numpy array
+        x = self.voxel_transformation(data)          # data is the numpy array, voxel_transformation converst to tensor amoung other things
 
         # ground truth
         y = filename.split("_")[0]                  # get the ground truth class

@@ -7,8 +7,8 @@ import pandas as pd
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
-from avae.decoders.decoders import Decoder, DecoderA, DecoderB
-from avae.encoders.encoders import Encoder, EncoderA, EncoderB
+from avae.decoders.decoders import Decoder, DecoderA, DecoderB, DecoderC
+from avae.encoders.encoders import Encoder, EncoderA, EncoderB, EncoderC
 
 from . import settings, vis
 from .cyc_annealing import cyc_annealing
@@ -171,7 +171,7 @@ def train(
         filters = np.array(
             np.array(filters).replace(" ", "").split(","), dtype=np.int64
         )
-
+# initialse the encoder object
     if model == "a":
         encoder = EncoderA(
             dshape, channels, depth, lat_dims, pose_dims, bnorm=bnorm_encoder
@@ -182,6 +182,9 @@ def train(
     elif model == "b":
         encoder = EncoderB(dshape, channels, depth, lat_dims, pose_dims)
         decoder = DecoderB(dshape, channels, depth, lat_dims, pose_dims)
+    elif model == "c":
+        encoder = EncoderC(dshape, channels, depth, lat_dims, pose_dims)
+        decoder = DecoderC(dshape, channels, depth, lat_dims, pose_dims)
     elif model == "u":
         encoder = Encoder(
             dshape,
@@ -206,9 +209,9 @@ def train(
 
     vae = AffinityVAE(encoder, decoder)
 
-    logging.info(vae)
+    logging.info(vae) # printing out information, here the model architecture
 
-    vae.to(device)
+    vae.to(device) # torch assining the model to cpu or gpu depending on what your are using
 
     if opt_method == "adam":
         optimizer = torch.optim.Adam(
@@ -252,7 +255,7 @@ def train(
         e_start = checkpoint["epoch"]
         t_history = checkpoint["t_loss_history"]
         v_history = checkpoint["v_loss_history"]
-
+# used to schedule some of the params to change during training - beta is the for the variational side, gamma for the affinity
     if beta_max == 0 and cyc_method_beta != "flat" and beta_load is not None:
         raise RuntimeError(
             "The maximum value for beta is set to 0, it is not possible to"
@@ -315,7 +318,7 @@ def train(
     if settings.VIS_CYC:
         vis.plot_cyc_variable(beta_arr, "beta")
         vis.plot_cyc_variable(gamma_arr, "gamma")
-
+# define the loss
     loss = AVAELoss(
         device,
         beta_arr,
@@ -324,7 +327,7 @@ def train(
         recon_fn=recon_fn,
         klred=klred,
     )
-
+# way of saving information
     if tensorboard:
         writer = SummaryWriter()
     else:
