@@ -571,12 +571,13 @@ def train(
                 writer=writer,
             )
 
+        if classes is not None:
+            classes_list = pd.read_csv(classes).columns.tolist()
+        else:
+            classes_list = []
+
         # visualise mean and logvar similarity matrix
         if settings.VIS_SIM and (epoch + 1) % settings.FREQ_SIM == 0:
-            if classes is not None:
-                classes_list = pd.read_csv(classes).columns.tolist()
-            else:
-                classes_list = []
 
             vis.latent_space_similarity(
                 x_train,
