@@ -357,7 +357,7 @@ class Dataset_reader(Dataset):     # this is a custom torch dataset
         x = Tensor(x)
 
         # unsqueeze adds a dimension for batch processing the data
-        x = x.unsqueeze(0)
+        x = x.unsqueeze(0) # leave this in, as required to track batches. Needs to be replicated in encoder output.
 
         if self.shift_min:
             x = (x - x.min()) / (x.max() - x.min())

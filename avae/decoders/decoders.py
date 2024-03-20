@@ -204,7 +204,7 @@ class DecoderA(AbstractDecoder):
         self.decoder.append(
             torch.nn.Linear(latent_dims + pose_dims, flat_shape)
         )
-        self.decoder.append(torch.nn.Unflatten(-1, unflat_shape))
+        self.decoder.append(torch.nn.Unflatten(-1, unflat_shape)) # this takes the last dimension (the fully connected layer output) and unflattens out to the dims of first conv. layer of the decoder
 
         if len(input_size) == 1: # EP added this if else as the decoder doesn't produce a 1d vector of the input size - kernal/stride/padding different to encoder
             for d in reversed(range(len(filters))):
@@ -430,7 +430,34 @@ class DecoderC(AbstractDecoder):
             torch.nn.Linear(n_hidden[0], input_features)
         )
 
+        self.decoder.append(
+            torch.nn.Unflatten(-1, tuple([1, input_features]))
+        )
+
     def forward(self, x, x_pose):
+
+        """Decoder forward pass.
+
+        Parameters
+        ----------
+        x : torch.Tensor (N, latent_dims)
+            Mini-batch of reparametrised encoder outputs, where N stands for
+            the number of samples in the mini-batch and
+            'latent_dims' defines the number of latent dimensions.
+        x_pose : torch.Tensor (N, pose_dims)
+            Mini-batch of outputs representing pose capturing the within-class
+            variance, where N stands for the number
+            of samples in the mini-batch and 'pose_dims' defines the number of
+            pose dimensions.
+
+        Returns
+        -------
+        x : torch.Tensor (N, Y, X)
+            Mini-batch of outputs, where N stands for the number of samples in
+            the mini-batch, CH stands for number of
+            channels and X, Y, define input dimensions.
+
+        """
         if self.pose:
             return self.decoder(torch.cat([x_pose, x], dim=-1))
         else:

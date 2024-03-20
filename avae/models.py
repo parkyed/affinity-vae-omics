@@ -124,7 +124,7 @@ class AffinityVAE(AbstractAffinityVAE):
         return x_recon, latent_mu, latent_logvar, latent, latent_pose
         # encode
 
-    def reparametrise(self, mu, log_var):
+    def reparametrise(self, mu, log_var):        # output of this function, a vector of length n_latent dims if input to the decoder
         if self.training:
             std = torch.exp(0.5 * log_var)
             eps = torch.randn_like(std)
