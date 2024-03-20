@@ -163,6 +163,7 @@ def train(
 
     # The spacial dimensions of the data
     dshape = list(trains)[0][0].shape[2:]
+    print(list(trains)[0][0].shape)
     pose = not (pose_dims == 0)
 
     # ############################### MODEL ###############################

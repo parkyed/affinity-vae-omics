@@ -172,7 +172,7 @@ class Encoder(AbstractEncoder):
 class EncoderA(AbstractEncoder):
     def __init__(
         self,
-        input_size: tuple,
+        input_size: tuple, # input size is the variable dshape in train.py
         capacity: Optional[int] = None,
         depth: int = 4,
         latent_dims: int = 8,
@@ -398,6 +398,10 @@ class EncoderC(AbstractEncoder):
         self.pose_fc = torch.nn.Linear(in_features=n_hidden[-1], out_features=pose_dims)
     def forward(self, x):
         encoded = self.encoder(x)
+        mu = self.mu(encoded) # mean calculated from the final fully connected layer - mean is a learned parameter
+        log_var = self.log_var(encoded) # variance calculated in the same way as the mean, but will be different since a learned parameter
+        pose = self.pose_fc(encoded) #
+
         mu = torch.flatten(self.mu(encoded), start_dim = 1)  # REMOVE THE FLATTEN IF SIZE ISSUE FIXED ELSEWHERE...mean calculated from the final fully connected layer - mean is a learned parameter
         log_var = torch.flatten(self.log_var(encoded), start_dim = 1)  # REMOVE THE FLATTEN IF SIZE ISSUE FIXED ELSEWHERE... variance calculated in the same way as the mean, but will be different since a learned parameter
         pose = torch.flatten(self.pose_fc(encoded), start_dim = 1) # REMOVE THE FLATTEN IF SIZE ISSUE FIXED ELSEWHERE...
