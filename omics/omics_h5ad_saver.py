@@ -6,7 +6,7 @@ import numpy as np
 # append class (cell_type) label and save as individual files.
 
 
-def matrixsplitsave(sc_matrix, cell_types, path_out):
+def matrixsplitsave(sc_matrix, cell_types, output_path):
     """
         Split obs (cells) from a sparce matrix (extracted from a h5ad file)
         and save into individual .npy files.
@@ -17,17 +17,17 @@ def matrixsplitsave(sc_matrix, cell_types, path_out):
             Sparce matrix data (from a h5ad file) to be split and saved.
         cell_types : list
             A List containing class labels (cell type) for each sample (cell).
-        path_out : str
+        output_path : str
             Path to the directory where the data will be saved.
 
         Returns:
         --------
-        None (files are saved to path_out directory)
+        None (files are saved to output_path directory)
 
         Notes:
         ------
         This function splits the input matrix `sc_matrix` into individual numpy arrays based on sample classes
-        provided in `cell_types` and saves them in separate files in the directory specified by `path_out`.
+        provided in `cell_types` and saves them in separate files in the directory specified by `output_path`.
         Each saved file is named using the sample's class label and sample ID.
 
         Example:
@@ -49,7 +49,7 @@ def matrixsplitsave(sc_matrix, cell_types, path_out):
 
     # Make sure that the user has a directory named input_arrays.
     # if not, create it.
-    input_arrays_path = os.path.join(path_out, 'input_arrays')
+    input_arrays_path = os.path.join(output_path, 'input_arrays')
     if not os.path.exists(input_arrays_path):
         os.makedirs(input_arrays_path)
         print(f"Directory '{input_arrays_path}' created.")
@@ -61,7 +61,7 @@ def matrixsplitsave(sc_matrix, cell_types, path_out):
         sample = np.array(sample)
 
         # Build save path
-        save_path = os.path.join(path_out, 'input_arrays', sample_name)
+        save_path = os.path.join(output_path, 'input_arrays', sample_name)
 
 
         # save the sample arrays
@@ -122,4 +122,4 @@ if __name__ == '__main__':
     print(f"Unique classes saved to {output_path}\class_lst.csv")
 
     # split matrix and save as individual files
-    matrixsplitsave(sc_matrix, cell_types, path_out=output_path)
+    matrixsplitsave(sc_matrix, cell_types, output_path)
