@@ -2,10 +2,43 @@ import anndata
 import os
 import numpy as np
 
-# function to split a h5ad file into a set of 1D np arrays, append class (cell_type) label and save as individual files.
+# script to split an h5ad file into a set of 1D numpy arrays,
+# append class (cell_type) label and save as individual files.
 
 
 def matrixsplitsave(omic_mat, sample_classes, path_out, adata):
+    """
+        Split obs (cells) from a sparce matrix (extracted from a h5ad file)
+        and save into individual .npy files.
+
+        Parameters:
+        -----------
+        omic_mat : scipy.sparse.csr_matrix
+            Sparce matrix data (from a h5ad file) to be split and saved.
+        sample_classes : list
+            A List containing class labels (cell type) for each sample (cell).
+        path_out : str
+            Path to the directory where the data will be saved.
+        adata : AnnData
+            Annotated data object containing information about samples.
+
+        Returns:
+        --------
+        None (files are saved to path_out directory)
+
+        Notes:
+        ------
+        This function splits the input matrix `omic_mat` into individual numpy arrays based on sample classes
+        provided in `sample_classes` and saves them in separate files in the directory specified by `path_out`.
+        Each saved file is named using the sample's class label and sample ID.
+
+        Example:
+        --------
+        omic_matrix = ...  # Load your omic matrix data
+        sample_classes = ['Class1', 'Class2', 'Class1', ...]  # Class labels for each sample
+        output_directory = '/path/to/output'  # Directory where the data will be saved
+        matrixsplitsave(omic_matrix, sample_classes, output_directory, adata)
+        """
     sample_names_vec = adata.obs_names
 
     gene_array_lst = list(range(omic_mat.shape[1]))
