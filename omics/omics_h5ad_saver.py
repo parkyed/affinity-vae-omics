@@ -1,20 +1,19 @@
-import anndata
 import os
 import numpy as np
 
-# script to split an h5ad file into a set of 1D numpy arrays,
+# script to split an .h5ad file into a set of 1D numpy arrays,
 # append class (cell_type) label and save as individual files.
 
 
-def matrixsplitsave(sc_matrix, cell_types, output_path):
+def matrix_split_save(sc_matrix, cell_types, output_path):
     """
-        Split obs (cells) from a sparce matrix (extracted from a h5ad file)
+        Split obs (cells) from a sparce matrix (extracted from a .h5ad file)
         and save into individual .npy files.
 
         Parameters:
         -----------
         sc_matrix : scipy.sparse.csr_matrix
-            Sparce matrix data (from a h5ad file) to be split and saved.
+            Sparce matrix data (from a .h5ad file) to be split and saved.
         cell_types : list
             A List containing class labels (cell type) for each sample (cell).
         output_path : str
@@ -35,7 +34,7 @@ def matrixsplitsave(sc_matrix, cell_types, output_path):
         sc_matrix = ...  # Load your omic matrix data
         cell_types = ['Class1', 'Class2', 'Class1', ...]  # Class labels for each sample
         output_directory = '/path/to/output'  # Directory where the data will be saved
-        matrixsplitsave(sc_matrix, cell_types, output_directory)
+        matrix_split_save(sc_matrix, cell_types, output_directory)
         """
     sample_names_vec = cell_types.index
 
@@ -45,7 +44,7 @@ def matrixsplitsave(sc_matrix, cell_types, output_path):
         gene_array_lst[idx] = sc_matrix[:, idx].A
         print(f"Processed column {idx + 1}/{sc_matrix.shape[1]}")
 
-    #gene_array_lst = sc_matrix.A.T.tolist()  # Optimized version of above, encounters issues with lack of memory.
+    # gene_array_lst = sc_matrix.A.T.tolist()  # Optimized version of above, encounters issues with lack of memory.
 
     # Make sure that the user has a directory named input_arrays.
     # if not, create it.
@@ -63,7 +62,6 @@ def matrixsplitsave(sc_matrix, cell_types, output_path):
         # Build save path
         save_path = os.path.join(output_path, 'input_arrays', sample_name)
 
-
         # save the sample arrays
         np.save(save_path, sample)
         idx = idx + 1
@@ -72,38 +70,42 @@ def matrixsplitsave(sc_matrix, cell_types, output_path):
 # parse arguments to extract file paths for saving down the data
 
 
-if __name__ == '__main__':
-
+# Importing the argparse module to handle command-line arguments
     import argparse
+    import anndata
 
+    # Creating an ArgumentParser object
     parser = argparse.ArgumentParser()
 
-    #
+    # Adding arguments for the script
+    # Argument for the path to the .h5ad file
     parser.add_argument(
         "--h5ad_file",
         help="Path to h5ad file (includes counts matrix and cell_type column in the metadata)"
     )
 
+    # Argument for the output path to save data
     parser.add_argument(
         "--output_path",
         help="Output path to save data"
     )
 
+    # Argument for the column name in the metadata that contains the cell type information
     parser.add_argument(
         "--cell_type_column_name",
         default="cell_type",
         help="The column name in the metadata that contains the cell type information. Default is 'cell_type'"
     )
 
-    #
+    # Parsing the command-line arguments
     args = parser.parse_args()
 
-    #
+    # Assigning values from parsed arguments to variables
     h5ad_file = args.h5ad_file
     output_path = args.output_path
     cell_type_column_name = args.cell_type_column_name
 
-    # read in h5ad file
+    # read in the .h5ad file
     anndata = anndata.read_h5ad(h5ad_file)
 
     # Extract the counts matrix
@@ -119,7 +121,7 @@ if __name__ == '__main__':
 
     # save the unique list of classes as a csv file
     np.savetxt(os.path.join(output_path, 'class_lst.csv'), cell_types_unique, fmt='%s',  delimiter=",")
-    print(f"Unique classes saved to {output_path}\class_lst.csv")
+    print(f"Unique classes saved to {output_path}\\class_lst.csv")
 
     # split matrix and save as individual files
-    matrixsplitsave(sc_matrix, cell_types, output_path)
+    matrix_split_save(sc_matrix, cell_types, output_path)
