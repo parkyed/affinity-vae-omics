@@ -6,21 +6,19 @@ import numpy as np
 # append class (cell_type) label and save as individual files.
 
 
-def matrixsplitsave(omic_mat, sample_classes, path_out, adata):
+def matrixsplitsave(sc_matrix, cell_types, path_out):
     """
         Split obs (cells) from a sparce matrix (extracted from a h5ad file)
         and save into individual .npy files.
 
         Parameters:
         -----------
-        omic_mat : scipy.sparse.csr_matrix
+        sc_matrix : scipy.sparse.csr_matrix
             Sparce matrix data (from a h5ad file) to be split and saved.
-        sample_classes : list
+        cell_types : list
             A List containing class labels (cell type) for each sample (cell).
         path_out : str
             Path to the directory where the data will be saved.
-        adata : AnnData
-            Annotated data object containing information about samples.
 
         Returns:
         --------
@@ -28,26 +26,26 @@ def matrixsplitsave(omic_mat, sample_classes, path_out, adata):
 
         Notes:
         ------
-        This function splits the input matrix `omic_mat` into individual numpy arrays based on sample classes
-        provided in `sample_classes` and saves them in separate files in the directory specified by `path_out`.
+        This function splits the input matrix `sc_matrix` into individual numpy arrays based on sample classes
+        provided in `cell_types` and saves them in separate files in the directory specified by `path_out`.
         Each saved file is named using the sample's class label and sample ID.
 
         Example:
         --------
-        omic_matrix = ...  # Load your omic matrix data
-        sample_classes = ['Class1', 'Class2', 'Class1', ...]  # Class labels for each sample
+        sc_matrix = ...  # Load your omic matrix data
+        cell_types = ['Class1', 'Class2', 'Class1', ...]  # Class labels for each sample
         output_directory = '/path/to/output'  # Directory where the data will be saved
-        matrixsplitsave(omic_matrix, sample_classes, output_directory, adata)
+        matrixsplitsave(sc_matrix, cell_types, output_directory)
         """
-    sample_names_vec = adata.obs_names
+    sample_names_vec = cell_types.index
 
-    gene_array_lst = list(range(omic_mat.shape[1]))
+    gene_array_lst = list(range(sc_matrix.shape[1]))
 
-    for idx in range(omic_mat.shape[1]):
-        gene_array_lst[idx] = omic_mat[:, idx].A
-        print(f"Processed column {idx + 1}/{omic_mat.shape[1]}")
+    for idx in range(sc_matrix.shape[1]):
+        gene_array_lst[idx] = sc_matrix[:, idx].A
+        print(f"Processed column {idx + 1}/{sc_matrix.shape[1]}")
 
-    #gene_array_lst = omic_mat.A.T.tolist()  # Optimized version of above, encounters issues with lack of memory.
+    #gene_array_lst = sc_matrix.A.T.tolist()  # Optimized version of above, encounters issues with lack of memory.
 
     # Make sure that the user has a directory named input_arrays.
     # if not, create it.
@@ -58,7 +56,7 @@ def matrixsplitsave(omic_mat, sample_classes, path_out, adata):
 
 # save each array with a file name prefixed with its class label
     idx = 0
-    for sid, sample, label in zip(sample_names_vec, gene_array_lst, sample_classes):
+    for sid, sample, label in zip(sample_names_vec, gene_array_lst, cell_types):
         sample_name = str(label) + '_' + str(sid) + '.npy'
         sample = np.array(sample)
 
@@ -124,4 +122,4 @@ if __name__ == '__main__':
     print(f"Unique classes saved to {output_path}\class_lst.csv")
 
     # split matrix and save as individual files
-    matrixsplitsave(omic_mat=sc_matrix, sample_classes=cell_types, path_out=output_path, adata=anndata)
+    matrixsplitsave(sc_matrix, cell_types, path_out=output_path)
