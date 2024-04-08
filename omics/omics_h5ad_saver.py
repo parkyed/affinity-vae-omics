@@ -36,15 +36,14 @@ def matrix_split_save(sc_matrix, cell_types, output_path):
         output_directory = '/path/to/output'  # Directory where the data will be saved
         matrix_split_save(sc_matrix, cell_types, output_directory)
         """
-    sample_names_vec = cell_types.index
 
-    gene_array_lst = list(range(sc_matrix.shape[1]))
+    cell_array_lst = list(range(sc_matrix.shape[0]))
 
-    for idx in range(sc_matrix.shape[1]):
-        gene_array_lst[idx] = sc_matrix[:, idx].A
-        print(f"Processed column {idx + 1}/{sc_matrix.shape[1]}")
+    for idx in range(sc_matrix.shape[0]):
+        cell_array_lst[idx] = sc_matrix[idx, :].A
+        print(f"Processed cell {idx + 1}/{sc_matrix.shape[0]}")
 
-    # gene_array_lst = sc_matrix.A.T.tolist()  # Optimized version of above, encounters issues with lack of memory.
+    # cell_array_lst = sc_matrix.A.tolist()  # Optimized version of above, encounters issues with lack of memory.
 
     # Make sure that the user has a directory named input_arrays.
     # if not, create it.
@@ -55,9 +54,10 @@ def matrix_split_save(sc_matrix, cell_types, output_path):
 
 # save each array with a file name prefixed with its class label
     idx = 0
-    for sid, sample, label in zip(sample_names_vec, gene_array_lst, cell_types):
+    cell_names = cell_types.index
+    for sid, sample, label in zip(cell_names, cell_array_lst, cell_types):
         sample_name = str(label) + '_' + str(sid) + '.npy'
-        sample = np.array(sample)
+        # sample = np.array(sample)
 
         # Build save path
         save_path = os.path.join(output_path, 'input_arrays', sample_name)
@@ -65,12 +65,14 @@ def matrix_split_save(sc_matrix, cell_types, output_path):
         # save the sample arrays
         np.save(save_path, sample)
         idx = idx + 1
-        print(f"Saved sample {idx}/{len(sample_names_vec)}")
+        print(f"Saved sample {idx}/{len(cell_names)}")
 
 # parse arguments to extract file paths for saving down the data
 
 
-# Importing the argparse module to handle command-line arguments
+if __name__ == '__main__':
+
+    # Importing the argparse module to handle command-line arguments
     import argparse
     import anndata
 
