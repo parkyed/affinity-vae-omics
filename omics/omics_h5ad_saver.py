@@ -109,9 +109,11 @@ if __name__ == '__main__':
 
     # read in the .h5ad file
     anndata = anndata.read_h5ad(h5ad_file)
+    print(r"read in the .h5ad file")
 
     # Extract the counts matrix
     sc_matrix = anndata.X
+    print(r"Extracted the counts matrix")
 
     # Extract the cell_type column from the metadata
     cell_types = anndata.obs[cell_type_column_name]
