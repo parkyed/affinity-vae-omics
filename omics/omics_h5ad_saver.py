@@ -119,6 +119,8 @@ if __name__ == '__main__':
     cell_types = anndata.obs[cell_type_column_name]
     # Modify cell_types to remove spaces
     cell_types = cell_types.str.replace(' ', '')
+    # Modify cell_types to remove commas
+    cell_types = cell_types.str.replace(',', '_')
 
     # Identify the unique classes
     cell_types_unique = np.unique(cell_types).reshape(1, -1)
