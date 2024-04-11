@@ -1,7 +1,7 @@
 import os
 import numpy as np
 
-# script to split an .h5ad file into a set of 1D numpy arrays,
+# Script to split an .h5ad file into a set of 1D numpy arrays,
 # append class (cell_type) label and save as individual files.
 
 
