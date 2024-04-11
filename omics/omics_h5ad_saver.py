@@ -40,7 +40,7 @@ def matrix_split_save(sc_matrix, cell_types, output_path):
     cell_array_lst = list(range(sc_matrix.shape[0]))
 
     for idx in range(sc_matrix.shape[0]):
-        cell_array_lst[idx] = sc_matrix[idx, :].A
+        cell_array_lst[idx] = sc_matrix[idx, :].A.reshape(-1,) # added reshape to make sure that my arrays are 1D
         print(f"Processed cell {idx + 1}/{sc_matrix.shape[0]}")
 
     # cell_array_lst = sc_matrix.A.tolist()  # Optimized version of above, encounters issues with lack of memory.
@@ -57,7 +57,8 @@ def matrix_split_save(sc_matrix, cell_types, output_path):
     cell_names = cell_types.index
     for sid, sample, label in zip(cell_names, cell_array_lst, cell_types):
         sample_name = str(label) + '_' + str(sid) + '.npy'
-        # sample = np.array(sample)
+        # sample = np.array(sample) #.reshape(1, -1)
+        # print(sample.shape)
 
         # Build save path
         save_path = os.path.join(output_path, 'input_arrays', sample_name)
