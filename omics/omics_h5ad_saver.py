@@ -109,15 +109,15 @@ if __name__ == '__main__':
     cell_type_column_name = args.cell_type_column_name
 
     # read in the .h5ad file
-    anndata = anndata.read_h5ad(h5ad_file)
+    adata = anndata.read_h5ad(h5ad_file)
     print(r"read in the .h5ad file")
 
     # Extract the counts matrix
-    sc_matrix = anndata.X
+    sc_matrix = adata.X
     print(r"Extracted the counts matrix")
 
     # Extract the cell_type column from the metadata
-    cell_types = anndata.obs[cell_type_column_name]
+    cell_types = adata.obs[cell_type_column_name]
     # Modify cell_types to remove spaces
     cell_types = cell_types.str.replace(' ', '')
     # Modify cell_types to remove commas
