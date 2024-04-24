@@ -40,7 +40,7 @@ def matrix_split_save(sc_matrix, cell_types, output_path):
     cell_array_lst = list(range(sc_matrix.shape[0]))
 
     for idx in range(sc_matrix.shape[0]):
-        cell_array_lst[idx] = sc_matrix[idx, :].A
+        cell_array_lst[idx] = sc_matrix[idx, :].A.reshape(-1,)  # added reshape to make sure that my arrays are 1D
         print(f"Processed cell {idx + 1}/{sc_matrix.shape[0]}")
 
     # cell_array_lst = sc_matrix.A.tolist()  # Optimized version of above, encounters issues with lack of memory.
@@ -48,16 +48,21 @@ def matrix_split_save(sc_matrix, cell_types, output_path):
     # Make sure that the user has a directory named input_arrays.
     # if not, create it.
     input_arrays_path = os.path.join(output_path, 'input_arrays')
-    if not os.path.exists(input_arrays_path):
+    if os.path.exists(input_arrays_path):
+        print(f"Warning '{input_arrays_path}' directory already exists")
+        warning_printed = True
+    else:
         os.makedirs(input_arrays_path)
         print(f"Directory '{input_arrays_path}' created.")
+        warning_printed = False
 
-# save each array with a file name prefixed with its class label
-    idx = 0
+    # save each array with a file name prefixed with its class label
+    #idx = 0
     cell_names = cell_types.index
-    for sid, sample, label in zip(cell_names, cell_array_lst, cell_types):
+    for idx, (sid, sample, label) in enumerate(zip(cell_names, cell_array_lst, cell_types)):
         sample_name = str(label) + '_' + str(sid) + '.npy'
-        # sample = np.array(sample)
+        # sample = np.array(sample) #.reshape(1, -1)
+        # print(sample.shape)
 
         # Build save path
         save_path = os.path.join(output_path, 'input_arrays', sample_name)
@@ -66,6 +71,15 @@ def matrix_split_save(sc_matrix, cell_types, output_path):
         np.save(save_path, sample)
         idx = idx + 1
         print(f"Saved sample {idx}/{len(cell_names)}")
+
+    # check that the number of files in input_arrays is equal to the number of saved samples
+    if idx != len(os.listdir(input_arrays_path)):
+        print("Warning: Number of files saved does not match the number of samples in input_arrays")
+
+    # Warning message at the end to indicate data may have been overwritten or appended to input_arrays,
+    # (only if the first one was printed).
+    if warning_printed:
+        print(f"Warning: Samples saved to previously generated directory '{input_arrays_path}'.")
 
 # parse arguments to extract file paths for saving down the data
 
@@ -108,17 +122,19 @@ if __name__ == '__main__':
     cell_type_column_name = args.cell_type_column_name
 
     # read in the .h5ad file
-    anndata = anndata.read_h5ad(h5ad_file)
+    adata = anndata.read_h5ad(h5ad_file)
     print(r"read in the .h5ad file")
 
     # Extract the counts matrix
-    sc_matrix = anndata.X
+    sc_matrix = adata.X
     print(r"Extracted the counts matrix")
 
     # Extract the cell_type column from the metadata
-    cell_types = anndata.obs[cell_type_column_name]
+    cell_types = adata.obs[cell_type_column_name]
+    # Modify cell_types to remove commas
+    cell_types = cell_types.str.replace(', ', '_')
     # Modify cell_types to remove spaces
-    cell_types = cell_types.str.replace(' ', '')
+    cell_types = cell_types.str.replace(' ', '-')
 
     # Identify the unique classes
     cell_types_unique = np.unique(cell_types).reshape(1, -1)
