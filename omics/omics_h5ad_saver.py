@@ -119,7 +119,7 @@ if __name__ == '__main__':
     # Extract the cell_type column from the metadata
     cell_types = adata.obs[cell_type_column_name]
     # Modify cell_types to remove spaces
-    cell_types = cell_types.str.replace(' ', '')
+    cell_types = cell_types.str.replace(' ', '-')
     # Modify cell_types to remove commas
     cell_types = cell_types.str.replace(',', '_')
 
