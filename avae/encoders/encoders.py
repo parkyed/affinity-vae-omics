@@ -405,5 +405,8 @@ class EncoderC(AbstractEncoder):
         mu = torch.flatten(self.mu(encoded), start_dim = 1)  # REMOVE THE FLATTEN IF SIZE ISSUE FIXED ELSEWHERE...mean calculated from the final fully connected layer - mean is a learned parameter
         log_var = torch.flatten(self.log_var(encoded), start_dim = 1)  # REMOVE THE FLATTEN IF SIZE ISSUE FIXED ELSEWHERE... variance calculated in the same way as the mean, but will be different since a learned parameter
         pose = torch.flatten(self.pose_fc(encoded), start_dim = 1) # REMOVE THE FLATTEN IF SIZE ISSUE FIXED ELSEWHERE...
-        return mu, log_var, pose
+        if self.pose:
+            return mu, log_var, pose
+        else:
+            return mu, log_var
 
