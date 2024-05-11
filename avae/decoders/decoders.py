@@ -407,24 +407,42 @@ class DecoderC(AbstractDecoder):
 
         assert len(input_size) == 1, "Input must be a 1D vector for this Encoder / Decoder"
 
-        n_hidden = np.repeat(capacity, depth)  # define n_hidden as a function of capacity and depth
+        # n_hidden = np.repeat(capacity, depth)  # define n_hidden as a function of capacity and depth
+        cap_in = capacity
+        n_hidden = np.zeros(depth, dtype=int)
+        for i in range(depth):
+            n_hidden[i] = cap_in
+            cap_in = cap_in/2
+
 
         self.decoder = torch.nn.Sequential()
 
         input_features = int(np.array(input_size)[0])  # the dimensions of the input
 
-        self.decoder.append(torch.nn.Linear(latent_dims + pose_dims, n_hidden[-1]))
+        layer_input = latent_dims + pose_dims
 
         for d in reversed(
                 range(len(n_hidden))):  # recursive adding of hidden layers, based on the n_hidden in each layer
             self.decoder.append(
                 nn.Linear(
-                    in_features=n_hidden[d],
-                    out_features=n_hidden[d-1]
+                    in_features=layer_input,
+                    out_features=n_hidden[d]
                 )
             )
             self.decoder.append(torch.nn.ReLU(True))
-            # input_features = n_hidden[d-1]  # update the number of nodes in the hidden layer to input to the next layer
+            layer_input = n_hidden[d]
+
+        # self.decoder.append(torch.nn.Linear(latent_dims + pose_dims, n_hidden[-1]))
+        #
+        # for d in reversed(
+        #         range(len(n_hidden))):  # recursive adding of hidden layers, based on the n_hidden in each layer
+        #     self.decoder.append(
+        #         nn.Linear(
+        #             in_features=n_hidden[d],
+        #             out_features=n_hidden[d-1]
+        #         )
+        #     )
+        #     self.decoder.append(torch.nn.ReLU(True))
 
         self.decoder.append(
             torch.nn.Linear(n_hidden[0], input_features)

@@ -377,7 +377,12 @@ class EncoderC(AbstractEncoder):
 
         assert len(input_size) == 1, "Input must be a 1D vector for this Encoder / Decoder"
 
-        n_hidden = np.repeat(capacity, depth)  # define n_hidden as a function of capacity and depth
+        # n_hidden = np.repeat(capacity, depth)  # define n_hidden as a function of capacity and depth
+        cap_in = capacity
+        n_hidden = np.zeros(depth, dtype=int)
+        for i in range(depth):
+            n_hidden[i] = cap_in
+            cap_in = cap_in/2
 
         self.encoder = torch.nn.Sequential()
 
