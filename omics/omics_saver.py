@@ -54,7 +54,7 @@ if __name__ == '__main__':
 
     # read in counts matrix and classes
     data_matrix = pd.read_csv(matrix_path, header=0)
-    sample_classes = pd.read_csv(labels_path, header=0).values.flatten()
+    sample_classes = pd.read_csv(labels_path, header=None).values.flatten()
     sample_classes_unique = np.unique(sample_classes).reshape(1, -1)  # -1 allows for variable number of classes
 
     # save the unique list of classes as a csv file
