@@ -432,18 +432,6 @@ class DecoderC(AbstractDecoder):
             self.decoder.append(torch.nn.ReLU(True))
             layer_input = n_hidden[d]
 
-        # self.decoder.append(torch.nn.Linear(latent_dims + pose_dims, n_hidden[-1]))
-        #
-        # for d in reversed(
-        #         range(len(n_hidden))):  # recursive adding of hidden layers, based on the n_hidden in each layer
-        #     self.decoder.append(
-        #         nn.Linear(
-        #             in_features=n_hidden[d],
-        #             out_features=n_hidden[d-1]
-        #         )
-        #     )
-        #     self.decoder.append(torch.nn.ReLU(True))
-
         self.decoder.append(
             torch.nn.Linear(n_hidden[0], input_features)
         )
