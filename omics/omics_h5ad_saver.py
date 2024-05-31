@@ -1,3 +1,7 @@
+# Importing the neccecary modules
+import argparse
+import anndata
+import scanpy
 import os
 import numpy as np
 
@@ -86,10 +90,6 @@ def matrix_split_save(sc_matrix, cell_types, output_path):
 
 if __name__ == '__main__':
 
-    # Importing the argparse module to handle command-line arguments
-    import argparse
-    import anndata
-
     # Creating an ArgumentParser object
     parser = argparse.ArgumentParser()
 
@@ -113,6 +113,13 @@ if __name__ == '__main__':
         help="The column name in the metadata that contains the cell type information. Default is 'cell_type'"
     )
 
+    # Argument for the number of most variable genes to include in the analysis
+    parser.add_argument(
+        "--n_most_variable_genes",
+        default=2000,
+        help="The number of the most vaiable genes to be included, Default is '2000'"
+    )
+
     # Parsing the command-line arguments
     args = parser.parse_args()
 
@@ -120,10 +127,18 @@ if __name__ == '__main__':
     h5ad_file = args.h5ad_file
     output_path = args.output_path
     cell_type_column_name = args.cell_type_column_name
+    ngenes = args.n_most_variable_genes
 
     # read in the .h5ad file
     adata = anndata.read_h5ad(h5ad_file)
     print(r"read in the .h5ad file")
+
+    #identify the most variable genes
+    scanpy.pp.highly_variable_genes(adata, n_top_genes = ngenes)
+
+    # downsample to only inlude the most variable genes
+    adata = adata[:, adata.var.highly_variable]
+    print(f"Subsetted the data to the top {ngenes} highly variable genes")
 
     # Extract the counts matrix
     sc_matrix = adata.X
