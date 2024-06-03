@@ -726,6 +726,7 @@ def run_pipeline(data):
             shift_min=data["shift_min"],
             rescale=data["rescale"],
             classifier=data["classifier"],
+            pose_dims=data["pose_dims"],       # ECP - added 3.06.24. Missing so can't turn off pose in evaluation
         )
 
 
