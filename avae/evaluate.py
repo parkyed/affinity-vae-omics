@@ -26,7 +26,7 @@ def evaluate(
     shift_min: bool,
     rescale: bool,
     classifier: str,
-    pose_dims: int,
+    pose_dims: int,      # This is a quick fix. previously the pose_dims was taken from elsewhere in the model (see line 98)
 ):
     """Function for evaluating the model. Loads the data, model and runs the evaluation. Saves the results of the
     evaluation in the plot and latents directories.
