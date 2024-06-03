@@ -14,3 +14,5 @@ tensorboard
 torch
 torchvision
 umap-learn
+anndata
+scanpy
