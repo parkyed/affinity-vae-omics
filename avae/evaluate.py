@@ -26,6 +26,7 @@ def evaluate(
     shift_min: bool,
     rescale: bool,
     classifier: str,
+    pose_dims: int,
 ):
     """Function for evaluating the model. Loads the data, model and runs the evaluation. Saves the results of the
     evaluation in the plot and latents directories.
@@ -94,7 +95,7 @@ def evaluate(
     s = os.path.basename(state)
     fname = s.split(".")[0].split("_")
     dshape = list(tests)[0][0].shape[2:]
-    pose_dims = fname[3]
+    # pose_dims = fname[3]                     # added pose_dims as an input to the function rather than rely on this which threw error
 
     logging.info("Loading model from: {}".format(state))
     checkpoint = torch.load(state)
