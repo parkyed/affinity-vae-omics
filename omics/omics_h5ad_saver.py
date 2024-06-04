@@ -29,9 +29,12 @@ def matrix_split_save(sc_matrix, cell_types, output_path):
 
         Notes:
         ------
-        This function splits the input matrix `sc_matrix` into individual numpy arrays based on sample classes
-        provided in `cell_types` and saves them in separate files in the directory specified by `output_path`.
+        This function splits the input matrix `sc_matrix` into 
+        individual numpy arrays based on sample classes provided in `cell_types`
+        and saves them in separate files in the specified directory.
         Each saved file is named using the sample's class label and sample ID.
+
+        This function was designed for use with files downloaded from cellXgene.
 
         Example:
         --------
@@ -97,7 +100,8 @@ if __name__ == '__main__':
     # Argument for the path to the .h5ad file
     parser.add_argument(
         "--h5ad_file",
-        help="Path to h5ad file (includes counts matrix and cell_type column in the metadata)"
+        help="Path to h5ad file, \n" \
+            "(includes counts matrix and cell_type column in the metadata)"
     )
 
     # Argument for the output path to save data
@@ -106,18 +110,20 @@ if __name__ == '__main__':
         help="Output path to save data"
     )
 
-    # Argument for the column name in the metadata that contains the cell type information
+    # Argument for the col name in the metadata that contains the cell-type info
     parser.add_argument(
         "--cell_type_column_name",
         default="cell_type",
-        help="The column name in the metadata that contains the cell type information. Default is 'cell_type'"
+        help="The col name in metadata that contains the cell-type info, \n" \
+        "Default is 'cell_type'"
     )
 
     # Argument for the number of most variable genes to include in the analysis
     parser.add_argument(
         "--n_most_variable_genes",
-        default=2000,
-        help="The number of the most vaiable genes to be included, Default is '2000'"
+        default=0,
+        help="The integer of the most vaiable genes to be included, \n" \
+             "Default is '0' (all genes)"
     )
 
     # Parsing the command-line arguments
@@ -127,18 +133,22 @@ if __name__ == '__main__':
     h5ad_file = args.h5ad_file
     output_path = args.output_path
     cell_type_column_name = args.cell_type_column_name
-    ngenes = args.n_most_variable_genes
+    ngenes = int(args.n_most_variable_genes)
 
     # read in the .h5ad file
     adata = anndata.read_h5ad(h5ad_file)
     print(r"read in the .h5ad file")
 
-    #identify the most variable genes
-    scanpy.pp.highly_variable_genes(adata, n_top_genes = ngenes)
+    # If --n_most_variable_genes is > 0, subset the data to the top ngenes
+    if ngenes > 0:
+        print(f"Subsetting the data to the top {ngenes} most variable genes")
+        #identify the most variable genes
+        scanpy.pp.highly_variable_genes(adata, n_top_genes = ngenes)
 
-    # downsample to only inlude the most variable genes
-    adata = adata[:, adata.var.highly_variable]
-    print(f"Subsetted the data to the top {ngenes} highly variable genes")
+        # downsample to only inlude the most variable genes
+        adata = adata[:, adata.var.highly_variable]
+        print(f"Subsetted the data to the top {ngenes} highly variable genes")
+    
 
     # Extract the counts matrix
     sc_matrix = adata.X
@@ -147,7 +157,7 @@ if __name__ == '__main__':
     # Extract the cell_type column from the metadata
     cell_types = adata.obs[cell_type_column_name]
     # Modify cell_types to remove commas
-    cell_types = cell_types.str.replace(', ', '_')
+    cell_types = cell_types.str.replace(', ', '--') # avoided _ as they're buggy
     # Modify cell_types to remove spaces
     cell_types = cell_types.str.replace(' ', '-')
 
