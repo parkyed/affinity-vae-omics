@@ -3,7 +3,7 @@ import argparse
 import anndata
 import scanpy
 import os
-import numpy as np
+import numpy
 
 # Script to split an .h5ad file into a set of 1D numpy arrays,
 # append class (cell_type) label and save as individual files.
@@ -44,11 +44,15 @@ def matrix_split_save(sc_matrix, cell_types, output_path):
         matrix_split_save(sc_matrix, cell_types, output_directory)
         """
 
+    # Create a list to store individual arrays
     cell_array_lst = list(range(sc_matrix.shape[0]))
 
+    # Split the matrix into individual arrays
     for idx in range(sc_matrix.shape[0]):
         cell_array_lst[idx] = sc_matrix[idx, :].A.reshape(-1,)  # added reshape to make sure that my arrays are 1D
-        print(f"Processed cell {idx + 1}/{sc_matrix.shape[0]}")
+        # print a message to indicate progress at 25% intervals
+        if idx % (sc_matrix.shape[0] // 4) == 0:
+            print(f"Cells processed: {idx}/{sc_matrix.shape[0]}")
 
     # cell_array_lst = sc_matrix.A.tolist()  # Optimized version of above, encounters issues with lack of memory.
 
@@ -57,27 +61,29 @@ def matrix_split_save(sc_matrix, cell_types, output_path):
     input_arrays_path = os.path.join(output_path, 'input_arrays')
     if os.path.exists(input_arrays_path):
         print(f"Warning '{input_arrays_path}' directory already exists")
-        warning_printed = True
+        input_arrays_warning_printed = True
     else:
         os.makedirs(input_arrays_path)
         print(f"Directory '{input_arrays_path}' created.")
-        warning_printed = False
+        input_arrays_warning_printed = False
 
     # save each array with a file name prefixed with its class label
     #idx = 0
     cell_names = cell_types.index
     for idx, (sid, sample, label) in enumerate(zip(cell_names, cell_array_lst, cell_types)):
         sample_name = str(label) + '_' + str(sid) + '.npy'
-        # sample = np.array(sample) #.reshape(1, -1)
+        # sample = numpy.array(sample) #.reshape(1, -1)
         # print(sample.shape)
 
         # Build save path
         save_path = os.path.join(output_path, 'input_arrays', sample_name)
 
         # save the sample arrays
-        np.save(save_path, sample)
+        numpy.save(save_path, sample)
         idx = idx + 1
-        print(f"Saved sample {idx}/{len(cell_names)}")
+        # if idx is a multiple of quater of the total loop itteratons, print a message to indicate progress
+        if idx % (len(cell_names) // 4) == 0:
+            print(f"Saved sample {idx}/{len(cell_names)}")
 
     # check that the number of files in input_arrays is equal to the number of saved samples
     if idx != len(os.listdir(input_arrays_path)):
@@ -85,8 +91,8 @@ def matrix_split_save(sc_matrix, cell_types, output_path):
 
     # Warning message at the end to indicate data may have been overwritten or appended to input_arrays,
     # (only if the first one was printed).
-    if warning_printed:
-        print(f"Warning: Samples saved to previously generated directory '{input_arrays_path}'.")
+    if input_arrays_warning_printed:
+        print(f"Warning: Samples added to previously generated directory '{input_arrays_path}'.")
 
 # parse arguments to extract file paths for saving down the data
 
@@ -120,7 +126,7 @@ if __name__ == '__main__':
 
     # Argument for the number of most variable genes to include in the analysis
     parser.add_argument(
-        "--n_most_variable_genes",
+        "--ngenes",
         default=0,
         help="The integer of the most vaiable genes to be included, \n" \
              "Default is '0' (all genes)"
@@ -133,13 +139,13 @@ if __name__ == '__main__':
     h5ad_file = args.h5ad_file
     output_path = args.output_path
     cell_type_column_name = args.cell_type_column_name
-    ngenes = int(args.n_most_variable_genes)
+    ngenes = int(args.ngenes)
 
     # read in the .h5ad file
     adata = anndata.read_h5ad(h5ad_file)
     print(r"read in the .h5ad file")
 
-    # If --n_most_variable_genes is > 0, subset the data to the top ngenes
+    # If --ngenes is > 0, subset the data to the top ngenes
     if ngenes > 0:
         print(f"Subsetting the data to the top {ngenes} most variable genes")
         #identify the most variable genes
@@ -162,11 +168,25 @@ if __name__ == '__main__':
     cell_types = cell_types.str.replace(' ', '-')
 
     # Identify the unique classes
-    cell_types_unique = np.unique(cell_types).reshape(1, -1)
+    cell_types_unique = numpy.unique(cell_types).reshape(1, -1)
+    print(r"Unique classes:" + str(cell_types_unique))
+
+    # Check if the class_lst.csv file already exists
+    if os.path.exists(os.path.join(output_path, 'class_lst.csv')):
+        print(f"Warning: '{output_path}\\class_lst.csv' already exists.")
+        class_warning_printed = True
+    else:
+        class_warning_printed = False
 
     # save the unique list of classes as a csv file
-    np.savetxt(os.path.join(output_path, 'class_lst.csv'), cell_types_unique, fmt='%s',  delimiter=",")
-    print(f"Unique classes saved to {output_path}\\class_lst.csv")
+    numpy.savetxt(os.path.join(output_path, 'class_lst.csv'), 
+                  cell_types_unique, 
+                  fmt='%s',  
+                  delimiter=",")
+    if class_warning_printed:
+        print(f"Warning: '{output_path}\\class_lst.csv' was overwritten.")
+    else:
+        print(f"Unique classes saved to {output_path}\\class_lst.csv")
 
     # split matrix and save as individual files
     matrix_split_save(sc_matrix, cell_types, output_path)
