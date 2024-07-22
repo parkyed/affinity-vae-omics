@@ -250,13 +250,14 @@ def latent_embed_plot_tsne(
                 lats[idx, 0],
                 lats[idx, 1],
                 s=24,
-                label=mol[:4],
+                # label=mol[:4], # don't want to cut off the legend labels at 4 characters
+                label=mol,
                 facecolor=color,
                 edgecolor=color,
                 alpha=0.2,
             )
 
-        ax.legend(bbox_to_anchor=(1.05, 1), loc="upper left", fontsize=16)
+        ax.legend(bbox_to_anchor=(0.5, -0.1), loc="upper center", ncol = 5, fontsize=10) # changed from upper left, and repositioned
         plt.xlabel("TSNE-1")
         plt.ylabel("TSNE-2")
 
@@ -278,7 +279,8 @@ def latent_embed_plot_tsne(
             prop={"size": 10},
             bbox_to_anchor=(1.05, 1),
             loc="upper left",
-            fontsize=16,
+            # fontsize=16,
+            fontsize=12,
         )
         plt.xlabel("dim 1")
         plt.ylabel("freq")
@@ -379,13 +381,14 @@ def latent_embed_plot_umap(
                 embedding[idx, 0],
                 embedding[idx, 1],
                 s=24,
-                label=mol[:4],
+                label=mol,
+                # label=mol[:4],
                 facecolor=color,
                 edgecolor=color,
                 alpha=0.2,
             )
 
-        ax.legend(bbox_to_anchor=(1.05, 1), loc="upper left", fontsize=16)
+        ax.legend(bbox_to_anchor = (0.5, -0.1), loc = "upper center", ncol = 6, fontsize = 10) # changed position and font size
         plt.xlabel("UMAP-1")
         plt.ylabel("UMAP-2")
 
@@ -407,7 +410,8 @@ def latent_embed_plot_umap(
             prop={"size": 10},
             bbox_to_anchor=(1.05, 1),
             loc="upper left",
-            fontsize=16,
+            fontsize=12,
+            # fontsize=16,
         )
         plt.xlabel("dim 1")
         plt.ylabel("freq")
@@ -695,7 +699,7 @@ def accuracy_plot(
             "Average accuracy at epoch {}: {:.3f}%".format(
                 epoch, np.mean(avg_accuracy) * 100
             ),
-            fontsize=10,
+            fontsize=7,                                       # ECP reduced font size to fit title
         )
 
         if not os.path.exists("plots"):
@@ -725,7 +729,7 @@ def accuracy_plot(
             "Average accuracy at epoch {}: {:.3f}%".format(
                 epoch, np.mean(avg_accuracy) * 100
             ),
-            fontsize=12,
+            fontsize=7,
         )
 
         if not os.path.exists("plots"):
@@ -786,7 +790,7 @@ def accuracy_plot(
             "Average accuracy at epoch {}: {:.1f}%".format(
                 epoch, np.mean(avg_accuracy_eval) * 100
             ),
-            fontsize=12,
+            fontsize=7,
         )
         plt.savefig(figure_name + ".png", dpi=300)
         plt.close()
@@ -808,7 +812,7 @@ def accuracy_plot(
             "Average accuracy at epoch {}: {:.1}% ".format(
                 epoch, np.mean(avg_accuracy_eval) * 100
             ),
-            fontsize=10,
+            fontsize=7,
         )
         plt.xlabel("Predicted label (%)")
         plt.ylabel("True label (%)")

@@ -226,11 +226,15 @@ def colour_per_class(classes: list) -> list:
     # Define the number of colors you want
     num_colors = len(classes)
 
-    # Choose colormaps for combining
-    cmap_1 = plt.get_cmap("tab20")
-    cmap_2 = plt.get_cmap("Accent")
-    cmap_3 = plt.get_cmap("Pastel1")
-    cmap_4 = plt.get_cmap("Set1")
+    # Choose colormaps for combining [ECP 3.06.24 - swapped tab20 for accent, as tab20 colours are in similar pairs]
+    # cmap_1 = plt.get_cmap("tab20")
+    # cmap_2 = plt.get_cmap("Accent")
+    # cmap_3 = plt.get_cmap("Pastel1")
+    # cmap_4 = plt.get_cmap("Set1")
+    cmap_1 = plt.get_cmap("Set1")
+    cmap_2 = plt.get_cmap("tab20")
+    cmap_3 = plt.get_cmap("Accent")
+    cmap_4 = plt.get_cmap("Pastel1")
 
     # Combine the four colormaps
     combined_cmap = [cmap_1(i % 20) for i in range(20)]
